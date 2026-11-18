@@ -1,11 +1,22 @@
 """Compile the approved model-to-endpoint allocation; no runtime service discovery."""
 from pathlib import Path
-import argparse, copy, hashlib, json
+import argparse, copy, csv, hashlib, json
 
 HERE = Path(__file__).resolve().parents[2]
 PROFILES = ('baseline', 'expanded')
-INPUTS = ('config/deployment.json', 'config/service_catalog.json', 'config/expanded_domains.json', 'config/advisory.json')
-SERVICE_COUNT = 10
+INPUTS = ('config/deployment.json', 'config/expanded_domains.json', 'config/advisory.json', 'core/services.def')
+
+def load_catalog():
+    records=[]
+    for line in (HERE / INPUTS[3]).read_text(encoding='utf-8').splitlines():
+        if not line.startswith('S('): continue
+        require(line.endswith(')'), 'invalid service line')
+        key,name,units,group,period,age,count,*inputs=next(csv.reader([line[2:-1]],strict=True))
+        n=int(count)
+        require(0<=n<=6 and len(inputs)==max(n,1), 'service arity')
+        records.append(dict(id=len(records),key=key,name=name,units=units,group=int(group),
+                            period_ms=int(period),max_age_ms=int(age),inputs=[int(i) for i in inputs[:n]]))
+    return records
 
 def input_digest():
     h = hashlib.sha256()
@@ -19,11 +30,15 @@ def require(condition, message):
         raise ValueError(message)
 
 def load_profiles():
-    base, catalog, splits, advisory = [json.loads((HERE / p).read_text(encoding='utf-8')) for p in INPUTS]
-    require(len(catalog) == SERVICE_COUNT and [s['id'] for s in catalog] == list(range(SERVICE_COUNT)), 'catalog IDs/order')
+    base, splits, advisory = [json.loads((HERE / p).read_text(encoding='utf-8')) for p in INPUTS[:3]]
+    catalog=load_catalog()
+    service_count=len(catalog)
+    require(0<service_count<=64 and len({s['key'] for s in catalog})==service_count, 'catalog size / unique keys')
+    require(base['wire_version']==3, 'unsupported wire version')
     for s in catalog:
         require(s['period_ms'] > 0 and s['period_ms'] % 10 == 0, 'period')
-        require(len(set(s['inputs'])) == len(s['inputs']) and all(0 <= i < SERVICE_COUNT and i != s['id'] for i in s['inputs']), 'input IDs')
+        require(s['max_age_ms']>=s['period_ms'], 'valid age / period')
+        require(len(set(s['inputs'])) == len(s['inputs']) and all(0 <= i < service_count and i != s['id'] for i in s['inputs']), 'input IDs')
     profiles = {'baseline': base, 'expanded': copy.deepcopy(base)}
     profiles['expanded']['domains'] = []
     base_names = {d['id'] for d in base['domains']}
@@ -39,14 +54,14 @@ def load_profiles():
             profiles['expanded']['domains'].append(d)
     for p, cfg in profiles.items():
         domains = cfg['domains']
-        require(2 <= len(domains) <= 32 and domains[0]['services'] == list(range(3)), 'input surrogate / domain count')
+        require(2 <= len(domains) <= 32 and domains[0]['id']=='sensor_io', 'input surrogate / domain count')
         require(len({d['id'] for d in domains}) == len(domains), 'domain IDs')
         require([d['index'] for d in domains] == list(range(len(domains))), 'contiguous domains')
         require(all(d['services'] for d in domains), 'empty domains')
-        owner = [None] * SERVICE_COUNT
+        owner = [None] * service_count
         for d in domains:
             for sid in d['services']:
-                require(0 <= sid < SERVICE_COUNT and owner[sid] is None, 'duplicate / unknown owner')
+                require(0 <= sid < service_count and owner[sid] is None, 'duplicate / unknown owner')
                 owner[sid] = d['index']
         require(None not in owner, 'missing owner')
         fanout = [set() for _ in owner]
@@ -63,10 +78,10 @@ def load_profiles():
         if p == advisory['profile']:
             matches=[d['index'] for d in domains if d['id']==advisory['domain']]
             require(len(matches)==1, 'advisory destination')
-            require(advisory['service_id']==SERVICE_COUNT and advisory['period_ms']>0 and advisory['period_ms']%10==0,
+            require(advisory['service_id']==service_count and advisory['period_ms']>0 and advisory['period_ms']%10==0,
                     'advisory ID/period')
             src=[e['id'] for e in advisory['inputs']]
-            require(len(src)==2 and len(set(src))==2 and all(0<=e['id']<SERVICE_COUNT and catalog[e['id']]['key']==e['key']
+            require(len(src)==2 and len(set(src))==2 and all(0<=e['id']<service_count and catalog[e['id']]['key']==e['key']
                     for e in advisory['inputs']), 'advisory input binding')
             require(all(owner[i]!=matches[0] for i in src),'advisory sources must be in a different domain')
             cfg['advisory']={**advisory,'domain_index':matches[0],'inputs':src,'logical_edges':len(src)}
@@ -87,6 +102,7 @@ def emit(out):
 #define IMA_GENERATED_LAYOUT_H
 #include <stdint.h>
 #define IMA_PROFILE_COUNT {n}u
+#define IMA_WIRE_VERSION {profiles[PROFILES[0]]['wire_version']}u
 #define IMA_CATALOG_COUNT {len(catalog)}u
 #define IMA_ADVISORY_ID {a['service_id']}u
 #define IMA_ADVISORY_PERIOD {a['period_ms']}u
@@ -101,6 +117,7 @@ static const uint32_t ima_fanout[IMA_PROFILE_COUNT][IMA_CATALOG_COUNT] = {{
 {rows([str(sum(1 << d for d in destinations))+'u' for destinations in profiles[p]['fanout']] for p in PROFILES)}
 }};
 static const uint32_t ima_period_ms[IMA_CATALOG_COUNT] = {{{','.join(str(s['period_ms'])+'u' for s in catalog)}}};
+static const uint32_t ima_max_age_ms[IMA_CATALOG_COUNT] = {{{','.join(str(s['max_age_ms'])+'u' for s in catalog)}}};
 static const uint64_t ima_inputs[IMA_CATALOG_COUNT] = {{{','.join(str(sum(1 << i for i in s['inputs']))+'ULL' for s in catalog)}}};
 #endif
 '''

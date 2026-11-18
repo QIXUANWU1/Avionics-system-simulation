@@ -16,7 +16,7 @@ static inline int ima_newer(uint32_t current, uint32_t previous)
 }
 
 typedef struct {
-    uint32_t sequence;
+    uint32_t sequence, model_ms;
     unsigned seen;
 } ImaSequence;
 
@@ -26,10 +26,11 @@ static inline int ima_accept_sample(const Message *m, uint32_t expected_epoch,
 {
     if (m->kind != KIND_SAMPLE || m->epoch != expected_epoch || m->flags > 1u ||
         (m->model_ms > local_ms && m->model_ms - local_ms > SIM_STEP_MS) ||
-        (seq->seen && !ima_newer(m->sequence, seq->sequence))) {
+        (seq->seen && (!ima_newer(m->sequence, seq->sequence) || m->model_ms<seq->model_ms))) {
         return 0;
     }
     seq->sequence = m->sequence;
+    seq->model_ms = m->model_ms;
     seq->seen = 1;
     return 1;
 }

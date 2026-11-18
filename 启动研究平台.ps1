@@ -1,6 +1,6 @@
 param(
     [ValidateSet('baseline','expanded')][string]$Profile = 'expanded',
-    [ValidateSet('mixed','oci','process')][string]$Mode = 'mixed',
+    [ValidateSet('oci','process')][string]$Mode = 'oci',
     [switch]$Observe,
     [switch]$BuildOnly,
     [string]$Distro = 'Ubuntu-22.04'

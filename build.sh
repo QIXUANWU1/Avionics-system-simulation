@@ -5,7 +5,7 @@ mkdir -p build
 sha256sum -c --status config/layout-inputs.sha256
 sha256sum -c --status third_party/genann/source-sha256.txt
 flags=(-std=c11 -O2 -Wall -Wextra -Werror -I. -Iinclude -Iconfig -Ithird_party/genann -static)
-gcc "${flags[@]}" src/linux/worker.c src/apps/advisory.c third_party/genann/genann.c core/sim.c -lm -o build/ima-worker.pending
+gcc "${flags[@]}" src/linux/worker.c src/comm/sample_route.c src/apps/advisory.c third_party/genann/genann.c core/*.c -lm -o build/ima-worker.pending
 gcc "${flags[@]}" src/linux/record_mirror.c -lm -o build/ima-record-mirror.pending
 build/ima-worker.pending --check-layout
 build/ima-record-mirror.pending --check-sources

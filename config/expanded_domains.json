@@ -1,24 +1,83 @@
 {
+  "flight_control": [
+    {
+      "id": "flight_inputs",
+      "name": "飞控姿态检查与模式",
+      "services": [
+        15,
+        16
+      ]
+    },
+    {
+      "id": "flight_commands",
+      "name": "飞控参考、操纵命令与状态",
+      "services": [
+        17,
+        18,
+        30
+      ]
+    }
+  ],
   "presentation": [
     {
       "id": "weather_display",
       "name": "气象显示输入",
       "services": [
-        6
+        6,
+        9
       ]
     },
     {
       "id": "analytics",
-      "name": "样本配对与旁路推理",
+      "name": "气象配对与旁路推理",
       "services": [
         7
       ]
     },
     {
-      "id": "display_status",
-      "name": "显示可用性状态",
+      "id": "flight_display",
+      "name": "主飞行显示",
       "services": [
-        9
+        25,
+        39
+      ]
+    },
+    {
+      "id": "crew_panel",
+      "name": "发动机、无线电与座舱状态",
+      "services": [
+        27,
+        28,
+        34
+      ]
+    }
+  ],
+  "aircraft_systems": [
+    {
+      "id": "propulsion_monitor",
+      "name": "动力与燃油",
+      "services": [
+        20,
+        23
+      ]
+    },
+    {
+      "id": "electrical_monitor",
+      "name": "电池及供电",
+      "services": [
+        21,
+        22
+      ]
+    },
+    {
+      "id": "airframe_monitor",
+      "name": "液压、起落架、刹车及环境",
+      "services": [
+        24,
+        31,
+        32,
+        33,
+        35
       ]
     }
   ]

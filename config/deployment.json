@@ -1,50 +1,101 @@
 {
-  "schema": "civil-weather-lab/1",
-  "scenario": "synthetic_civil_onboard_weather_display",
+  "schema": "civil-fixed-wing-lab/2",
+  "scenario": "synthetic_civil_fixed_wing_bench",
   "sim_step_ms": 10,
-  "wire_version": 2,
+  "wire_version": 3,
   "domains": [
     {
       "index": 0,
       "id": "sensor_io",
-      "name": "Linux 采集替身：合成输入",
+      "name": "采集替身与操纵输入",
       "services": [
         0,
         1,
-        2
+        2,
+        10,
+        13,
+        14,
+        29,
+        36,
+        38
       ]
     },
     {
       "index": 1,
-      "id": "navigation_context",
-      "name": "高度上下文",
+      "id": "aircraft_model",
+      "name": "合成作动器与飞机响应",
       "services": [
-        3
+        11,
+        12,
+        19
       ]
     },
     {
       "index": 2,
+      "id": "flight_control",
+      "name": "姿态检查、飞控模式与操纵",
+      "services": [
+        15,
+        16,
+        17,
+        18,
+        30
+      ]
+    },
+    {
+      "index": 3,
+      "id": "navigation_context",
+      "name": "高度与导航显示",
+      "services": [
+        3,
+        26,
+        37
+      ]
+    },
+    {
+      "index": 4,
       "id": "weather_decode",
-      "name": "气象摘要与可用性",
+      "name": "气象摘要与检查",
       "services": [
         4,
         5
       ]
     },
     {
-      "index": 3,
+      "index": 5,
       "id": "presentation",
-      "name": "气象显示与统计",
+      "name": "气象显示、仪表和座舱",
       "services": [
         6,
         7,
-        9
+        9,
+        25,
+        27,
+        28,
+        34,
+        39
       ]
     },
     {
-      "index": 4,
+      "index": 6,
+      "id": "aircraft_systems",
+      "name": "航电供电和机电监视",
+      "services": [
+        20,
+        21,
+        22,
+        23,
+        24,
+        31,
+        32,
+        33,
+        35
+      ]
+    },
+    {
+      "index": 7,
       "id": "input_status",
-      "name": "采集输入状态",
+      "name": "采集状态监视",
       "services": [
         8
       ]

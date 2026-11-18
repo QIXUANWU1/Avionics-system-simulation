@@ -9,8 +9,9 @@ int main(void)
 {
     AdvisoryModel *model=ima_advisory_create();
     assert(model);
-    Frame src, baro, nav_input, raw, nav, radar, checked, display;
-    sim_init(&src);src.tick_ms=500;
+    Frame empty, src, baro, nav_input, raw, nav, radar, checked, display;
+    sim_init(&empty);empty.tick_ms=500;
+    sim_service(&empty,SID_plant_motion,&src,NULL,NULL);
     sim_service(&src,0,&baro,NULL,NULL);
     sim_service(&baro,1,&nav_input,NULL,NULL);
     sim_service(&nav_input,2,&raw,NULL,NULL);

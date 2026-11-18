@@ -1,5 +1,5 @@
 #define _POSIX_C_SOURCE 200809L
-#include "sampling_port.h"
+#include "sample_route.h"
 #include "advisory.h"
 #include "generated_layout.h"
 #include <arpa/inet.h>
@@ -13,6 +13,7 @@
 #include <signal.h>
 
 #define RX_LIMIT 512
+_Static_assert(WIRE_VERSION == IMA_WIRE_VERSION, "wire version");
 _Static_assert(SIM_SERVICES == IMA_CATALOG_COUNT && SIM_SERVICES <= 64, "compiled catalog size");
 _Static_assert(ADVISORY_SID==IMA_ADVISORY_ID && ADVISORY_PERIOD_MS==IMA_ADVISORY_PERIOD &&
                ADVISORY_RADAR==IMA_ADVISORY_SOURCE_0 && ADVISORY_NAV==IMA_ADVISORY_SOURCE_1,"advisory binding");
@@ -75,7 +76,7 @@ static void on_read(const ReadEvent *e, void *ctx)
         .source_ns=now_ns(),.v={(double)e->source_ms,(double)e->status,0}};
     mirror(&m);
 }
-static void drain(Frame *state, ImaSequence seq[SIM_SERVICES], uint32_t ms)
+static void drain(Frame *state, ImaSampleRoute *route, uint32_t ms)
 {
     for (int n=0; n<RX_LIMIT; ++n) {
         uint8_t b[WIRE_SIZE];
@@ -87,20 +88,15 @@ static void drain(Frame *state, ImaSequence seq[SIM_SERVICES], uint32_t ms)
             break;
         }
         Message m;
-        if (len!=WIRE_SIZE || wire_decode(b,WIRE_SIZE,&m) || m.kind!=KIND_SAMPLE || m.sid>=SIM_SERVICES) {
-            rejected[BAD_WIRE]++; continue;
+        const unsigned port=fl==sizeof from&&from.sin_family==AF_INET&&from.sin_addr.s_addr==htonl(INADDR_LOOPBACK)
+                            ?ntohs(from.sin_port):0;
+        const unsigned first=ntohs(destinations[0].sin_port);
+        const unsigned source=port>=first?port-first:UINT32_MAX;
+        const enum ImaRx result=ima_route_accept(route,source,b,(int)len,ms,state,&m);
+        if (result!=IMA_RX_OK) {
+            rejected[result==IMA_RX_BAD_WIRE?BAD_WIRE:result==IMA_RX_BAD_ROUTE?BAD_ROUTE:BAD_SAMPLE]++;
+            continue;
         }
-        const unsigned owner = ima_owner[profile][m.sid];
-        if (fl!=sizeof from || from.sin_family!=AF_INET || from.sin_addr.s_addr!=htonl(INADDR_LOOPBACK) ||
-            from.sin_port!=destinations[owner].sin_port || !(ima_fanout[profile][m.sid] & (UINT32_C(1)<<domain))) {
-            rejected[BAD_ROUTE]++; continue;
-        }
-        if (!ima_accept_sample(&m,IMA_DOMAIN_EPOCH(session,owner),ms,&seq[m.sid])) {
-            rejected[BAD_SAMPLE]++; continue;
-        }
-        Sample *s = &state->samples[m.sid];
-        memcpy(s->v,m.v,sizeof s->v);
-        s->valid=(int)m.flags; s->sequence=m.sequence; s->time_ms=m.model_ms;
         received++;
         if (observe) {
             m.kind=KIND_RECEIVE; m.flags=domain; m.epoch=epoch; m.source_ns=now_ns();
@@ -115,7 +111,8 @@ static int validate_layout(void)
         uint32_t fanout[SIM_SERVICES]={0};
         for (unsigned i=0; i<SIM_SERVICES; ++i) {
             const Service *s=&sim_services[i];
-            if (ima_owner[p][i]>=ima_domain_count[p] || (uint32_t)s->period_ms!=ima_period_ms[i]) return 1;
+            if (ima_owner[p][i]>=ima_domain_count[p] || (uint32_t)s->period_ms!=ima_period_ms[i] ||
+                (uint32_t)s->max_age_ms!=ima_max_age_ms[i]) return 1;
             uint64_t inputs=0;
             for (int k=0; k<s->ninputs; ++k) {
                 const unsigned producer=(unsigned)s->inputs[k];
@@ -176,7 +173,7 @@ int main(int argc, char **argv)
     Frame state;
     sim_init(&state);
     for (int i=0;i<SIM_SERVICES;i++) state.samples[i].valid=0;
-    ImaSequence seq[SIM_SERVICES]={0};
+    ImaSampleRoute route={.profile=profile,.domain=domain,.session=session};
     uint32_t loop=0;
     until(start);
     while (running) {
@@ -184,7 +181,7 @@ int main(int argc, char **argv)
         const uint64_t since_ms=(before-start)/1000000u;
         if (since_ms>=duration) break;
         const uint32_t ms=(uint32_t)since_ms / SIM_STEP_MS * SIM_STEP_MS;
-        drain(&state,seq,ms);
+        drain(&state,&route,ms);
         ++loop; state.tick_ms=ms;
         const Frame snapshot=state;
         for (unsigned i=0;i<SIM_SERVICES;++i) {

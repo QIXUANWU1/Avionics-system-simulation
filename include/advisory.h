@@ -2,9 +2,9 @@
 #define IMA_WEATHER_ADVISORY_H
 #include "core/sim.h"
 
-#define ADVISORY_SID 10u
-#define ADVISORY_RADAR 4u
-#define ADVISORY_NAV 3u
+#define ADVISORY_SID SIM_SERVICES
+#define ADVISORY_RADAR SID_weather_summary
+#define ADVISORY_NAV SID_nav_context
 #define ADVISORY_PERIOD_MS 500u
 #define ADVISORY_ROWS 16384u
 #define ADVISORY_FEATURES 4u

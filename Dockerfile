@@ -9,5 +9,6 @@ COPY build.sh ./
 RUN bash build.sh
 FROM scratch
 COPY --from=build /src/build/ima-worker /ima-worker
+COPY --from=build /src/build/ima-record-mirror /ima-record-mirror
 USER 1000:1000
 ENTRYPOINT ["/ima-worker"]
