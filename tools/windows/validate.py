@@ -18,7 +18,7 @@ class LabChecks(unittest.TestCase):
 
     def test_inventory_and_routes(self):
         profiles,catalog=layout.load_profiles()
-        self.assertEqual(len(catalog),59)
+        self.assertEqual(len(catalog),62)
         for profile,cfg in profiles.items():
             with self.subTest(profile=profile):
                 n=len(catalog)
@@ -34,6 +34,15 @@ class LabChecks(unittest.TestCase):
                     self.assertEqual(cfg['domains'][a['domain_index']]['id'],'analytics')
                     for s in a['inputs']:expected[s].add(a['domain_index'])
                 self.assertEqual([set(x) for x in cfg['fanout']],expected)
+
+    def test_target_board_placement(self):
+        target={s['key']:s for s in self.cfg['target_services']}
+        self.assertEqual({s['board'] for s in target.values()},set('ABCDE'))
+        self.assertEqual({key for key,s in target.items() if s['runtime']=='tianmai3-native'},
+                         {'imu_sample','airdata_sample','imu_backup'})
+        self.assertEqual(target['control_effort']['runtime'],'tianmai3-container')
+        self.assertEqual(target['route_indication']['runtime'],'linux-oci')
+        self.assertEqual(target['plant_motion']['runtime'],'bench-fixture')
 
     def test_one_runtime_per_host(self):
         for p,count in [('baseline',9),('expanded',15)]:
@@ -73,7 +82,7 @@ class LabChecks(unittest.TestCase):
         self.assertEqual(len(self.cfg['fanout']),n)
 
     def test_binary_rejects_old_or_invalid_wire(self):
-        msg=run.WIRE.pack(b'IMAR',4,1,0,11,12,20,1,2000,1,2,3)
+        msg=run.WIRE.pack(b'IMAR',5,1,0,11,12,20,1,2000,1,2,3)
         self.assertEqual(run.unpack(msg)['v'],[1,2,3])
         for bad in (msg[:-1],msg[:4]+b'\x02'+msg[5:],msg[:32]+struct.pack('<d',float('nan'))+msg[40:]):
             with self.assertRaises(ValueError):run.unpack(bad)

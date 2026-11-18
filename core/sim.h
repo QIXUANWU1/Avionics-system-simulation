@@ -1,7 +1,7 @@
 #ifndef IMA_CIVIL_FIXED_WING_SIM_H
 #define IMA_CIVIL_FIXED_WING_SIM_H
 #include <stdint.h>
-#define SIM_GROUPS 9
+#define SIM_GROUPS 10
 #define SIM_INPUTS 6
 #define SIM_STEP_MS 10
 

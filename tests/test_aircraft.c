@@ -12,6 +12,7 @@ typedef struct {
     Frame frame[MAX_DOMAINS];
     ImaSampleRoute route[MAX_DOMAINS];
     unsigned received;
+    unsigned produced_valid[SIM_SERVICES];
 } TestLab;
 
 static void tick(TestLab *lab,unsigned profile,uint32_t now)
@@ -26,6 +27,7 @@ static void tick(TestLab *lab,unsigned profile,uint32_t now)
         Frame next;
         sim_service(&lab->frame[ima_owner[profile][id]],(int)id,&next,NULL,NULL);
         published[id]=next.samples[id];
+        if (published[id].valid) lab->produced_valid[id]=1;
         due[id]=1;
     }
     for (unsigned id=0;id<SIM_SERVICES;id++) {
@@ -60,7 +62,7 @@ static void run_profile(unsigned p)
     TestLab lab={0};
     for (unsigned d=0;d<ima_domain_count[p];d++)
         lab.route[d]=(ImaSampleRoute){.profile=p,.domain=d,.session=UINT32_C(0x87654321)};
-    double bank_after_input=0, fuel_before=0, heading_before=0;
+    double bank_after_input=0, fuel_before=0, heading_before=0, route_before=0;
     for (uint32_t t=0;t<=10500;t+=SIM_STEP_MS) {
         tick(&lab,p,t);
         if (t==800) {
@@ -69,6 +71,8 @@ static void run_profile(unsigned p)
             assert(sample(&lab,p,SID_crew_indication).v[0]==0);
             fuel_before=sample(&lab,p,SID_fuel_quantity).v[0];
             heading_before=sample(&lab,p,SID_navigation_display).v[1];
+            route_before=sample(&lab,p,SID_route_indication).v[0];
+            assert(route_before>2 && route_before<2.5);
         } else if (t==1500) {
             assert(sample(&lab,p,SID_gear_indication).v[0]==2);
             assert(sample(&lab,p,SID_gear_position_fixture).v[0]>0);
@@ -84,6 +88,11 @@ static void run_profile(unsigned p)
             const Sample nav=sample(&lab,p,SID_navigation_display), gps=sample(&lab,p,SID_gnss_fixture);
             assert(nav.v[1]>heading_before && fabs(nav.v[1]-gps.v[1])<1);
             assert(fabs(nav.v[2]-gps.v[2])<.5);
+            const Sample position=sample(&lab,p,SID_gnss_position);
+            const Sample route=sample(&lab,p,SID_route_indication);
+            assert(position.v[0]>200 && fabs(position.v[1])<40);
+            assert(route.v[0]<route_before-.07 && route.v[0]>1.9);
+            assert(route.v[2]>0 && route.v[2]<.1);
             assert(sample(&lab,p,SID_display_airdata).v[0]>6000);
             assert(sample(&lab,p,SID_atmosphere_sample).v[0]<1013.25);
             assert(sample(&lab,p,SID_gear_indication).v[0]==0);
@@ -101,6 +110,7 @@ static void run_profile(unsigned p)
     }
     assert(sample(&lab,p,SID_primary_display).v[0]<-7.0);
     assert(lab.received>1000);
+    for (unsigned id=0;id<SIM_SERVICES;id++) assert(lab.produced_valid[id]);
 
     const unsigned control=ima_owner[p][SID_flight_mode];
     Frame lost=lab.frame[control], out;
@@ -119,8 +129,23 @@ static void run_profile(unsigned p)
     sim_service(&lost,SID_crew_indication,&out,NULL,NULL);
     assert(out.samples[SID_crew_indication].valid && ((unsigned)out.samples[SID_crew_indication].v[0]&1u));
 
-    printf("Profile %u: pilot, simulated actuator, aircraft response, sensor feedback, displays and systems; %u routed samples.\n",
-           p,lab.received);
+    lost=lab.frame[ima_owner[p][SID_route_indication]];
+    lost.samples[SID_gnss_position].time_ms=0;
+    sim_service(&lost,SID_route_indication,&out,NULL,NULL);
+    assert(!out.samples[SID_route_indication].valid);
+
+    lost=lab.frame[ima_owner[p][SID_position_fixture]];
+    const double east=lost.samples[SID_position_fixture].v[0];
+    lost.samples[SID_plant_motion].valid=0;
+    sim_service(&lost,SID_position_fixture,&out,NULL,NULL);
+    assert(!out.samples[SID_position_fixture].valid && out.samples[SID_position_fixture].v[0]==east);
+    out.samples[SID_plant_motion].valid=1;
+    out.tick_ms+=20;
+    sim_service(&out,SID_position_fixture,&lost,NULL,NULL);
+    assert(lost.samples[SID_position_fixture].valid && lost.samples[SID_position_fixture].v[0]==east);
+
+    printf("Profile %u: pilot, simulated actuator, aircraft response, sensor feedback, displays and systems; %u routed samples and all %u service outputs.\n",
+           p,lab.received,(unsigned)SIM_SERVICES);
 }
 
 int main(void)

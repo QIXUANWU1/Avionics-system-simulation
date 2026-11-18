@@ -20,5 +20,6 @@ double demo_attitude_scale(unsigned axis_index);
 int extended_systems_step(const ModelStep *,Sample *);
 int flight_step(const ModelStep *,Sample *);
 int systems_step(const ModelStep *,Sample *);
+int navigation_step(const ModelStep *,Sample *);
 int information_step(const ModelStep *,Sample *);
 #endif

@@ -22,7 +22,7 @@ models=(src/apps/advisory.c third_party/genann/genann.c core/*.c)
 gcc "${flags[@]}" "${dds_flags[@]}" -Ibuild/idl src/linux/worker.c src/linux/dds_link.c build/idl/ImalabState.c \
     src/comm/sample_route.c "${models[@]}" -lddsc -lm -o build/ima-worker.pending
 gcc "${flags[@]}" -static src/linux/record_mirror.c -lm -o build/ima-record-mirror.pending
-gcc "${flags[@]}" "${dds_flags[@]}" -Ibuild/idl src/linux/panel.c src/apps/cockpit.c src/apps/cabin_fixture.c \
+gcc "${flags[@]}" "${dds_flags[@]}" -Ibuild/idl src/linux/panel.c src/apps/cockpit.c src/apps/cockpit_detail.c src/apps/cabin_fixture.c \
     src/linux/dds_link.c build/idl/ImalabState.c "${models[@]}" -lddsc -lm -o build/ima-panel.pending
 gcc "${flags[@]}" -static src/linux/health.c core/*.c -lm -o build/ima-health.pending
 build/ima-worker.pending --check-layout

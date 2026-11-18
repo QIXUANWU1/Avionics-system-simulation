@@ -1,33 +1,71 @@
 <!doctype html>
 <html lang="zh-CN">
 <meta charset="utf-8">
-<title>固定翼航电软件台架 · 综合显示</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>固定翼座舱显示</title>
 <style>
-html,body{margin:0;background:#0b100f;color:#dde9dd;font:15px "Microsoft YaHei","Noto Sans CJK SC",system-ui}
-main{max-width:1600px;margin:auto;text-align:center}
-img{display:block;width:100%;height:auto}
-p{padding:0 .8rem;color:#9bb8c6}
+:root{color-scheme:dark;background:#101512;color:#dce7de}
+body{margin:0;font:15px "Microsoft YaHei","Noto Sans CJK SC",sans-serif}
+main{max-width:1430px;margin:auto;padding:12px}
+nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:0 0 9px}
+button{font:inherit;min-width:95px;padding:8px 14px;border:1px solid #566459;border-radius:2px;background:#1a211d;color:inherit;cursor:pointer}
+button[aria-pressed=true]{background:#2b4033;border-color:#a9d9a6;color:#c6f4c0}
+button:focus-visible{outline:2px solid #e8ca80;outline-offset:2px}
+kbd{margin-right:6px;font:normal 13px Consolas,monospace;color:#abc4ae}
+#status{font-size:13px;color:#a8baac;margin-left:auto}
+img{display:block;width:100%;height:auto;aspect-ratio:1280/840;object-fit:contain;background:#0b100f}
+@media(max-width:580px){main{padding:6px}#status{width:100%;margin-left:0}}
 </style>
 <main>
-<img id="panel" src="panel.svg" alt="本地固定翼航电仪表">
-<p id="status" role="status">正在读取本地仪表…</p>
+<nav aria-label="显示页面">
+  <button type="button" data-page="" aria-pressed="true"><kbd>1</kbd>主飞行</button>
+  <button type="button" data-page="navigation" aria-pressed="false"><kbd>2</kbd>导航</button>
+  <button type="button" data-page="systems" aria-pressed="false"><kbd>3</kbd>系统</button>
+  <span id="status" role="status">正在读取座舱数据</span>
+</nav>
+<img id="panel" width="1280" height="840" alt="座舱显示">
 </main>
 <script>
 const panel = document.getElementById('panel');
-const status = document.getElementById('status');
+const connection = document.getElementById('status');
+const buttons = Array.from(document.querySelectorAll('[data-page]'));
+const pages = buttons.map(button => button.dataset.page);
+const initial = location.hash.slice(1);
+let page = pages.includes(initial) ? initial : '';
+let request = 0;
+let timer;
+
 function refresh() {
+    clearTimeout(timer);
+    const id = ++request;
     const next = new Image();
     next.onload = () => {
+        if (id !== request) return;
         panel.src = next.src;
-        status.textContent = '本地仪表 · 正在显示合成传感器数据';
-        setTimeout(refresh, 200);
+        connection.textContent = '合成传感器数据';
+        timer = setTimeout(refresh, 350);
     };
     next.onerror = () => {
-        status.textContent = '等待仪表画面。请先启动本地预览程序。';
-        setTimeout(refresh, 600);
+        if (id !== request) return;
+        panel.removeAttribute('src');
+        connection.textContent = '等待座舱数据';
+        timer = setTimeout(refresh, 700);
     };
-    next.src = 'panel.svg?frame=' + Date.now();
+    next.src = 'panel.svg?frame=' + Date.now() + (page ? '#' + page : '');
 }
-refresh();
+
+function select(nextPage) {
+    page = nextPage;
+    buttons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.page === page)));
+    panel.removeAttribute('src');
+    refresh();
+}
+
+buttons.forEach(button => button.addEventListener('click', () => select(button.dataset.page)));
+document.addEventListener('keydown', event => {
+    if (!event.ctrlKey && !event.altKey && !event.metaKey && /^[123]$/.test(event.key)) {
+        select(pages[Number(event.key) - 1]);
+    }
+});
+select(page);
 </script>

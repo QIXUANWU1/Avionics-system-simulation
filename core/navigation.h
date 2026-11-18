@@ -1,0 +1,8 @@
+#ifndef IMA_NAVIGATION_H
+#define IMA_NAVIGATION_H
+
+#define LAB_WAYPOINT_E_M 4200.0
+#define LAB_WAYPOINT_N_M 1200.0
+#define LAB_METRES_PER_NM 1852.0
+
+#endif

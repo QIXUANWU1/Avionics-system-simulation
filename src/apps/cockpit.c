@@ -168,11 +168,11 @@ static void systems_strip(Draw *d)
 int cockpit_write_svg(FILE *f,const CockpitState *state)
 {
     fputs("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 840' width='1280' height='840'>\n"
-          "<title>固定翼航电综合显示</title>"
+          "<title>固定翼航电综合显示</title><view id='navigation' viewBox='0 840 1280 840'/><view id='systems' viewBox='0 1680 1280 840'/>"
           "<defs><clipPath id='att'><circle cx='0' cy='0' r='168'/></clipPath></defs>"
           "<style>text{font-family:'Microsoft YaHei','Noto Sans CJK SC','DejaVu Sans',Arial,sans-serif;fill:#dde9dd}.title{font-size:26px;font-weight:700}"
           ".label{font-size:18px;font-weight:700;letter-spacing:1px}.sub{font-size:13px;letter-spacing:.7px;fill:#a3b2a7}"
-          ".reading{font-size:25px;font-weight:700}.tape{font-size:29px;font-weight:700}.tick{font-size:15px}"
+          ".number{font-size:26px;font-weight:700;font-family:'IBM Plex Mono',Consolas,monospace}.reading{font-size:25px;font-weight:700}.tape{font-size:29px;font-weight:700}.tick{font-size:15px}"
           ".mark{font-size:12px;fill:#fff}.middle{text-anchor:middle}.warning{font-size:15px;font-weight:700;fill:#ffcf7a}"
           ".status{font-size:15px;font-weight:700;fill:#9fe48b}.box{fill:#171d1c;stroke:#3a4741}"
           ".inset{fill:#090e0d;stroke:#46534b}</style>"
@@ -187,6 +187,17 @@ int cockpit_write_svg(FILE *f,const CockpitState *state)
     fprintf(f,"<text x='935' y='51' text-anchor='end' class='%s'>机电：%s</text>",
             normal?"status":"warning",!checks?"无数据":normal?"正常":"检查");
     attitude(&d); side(&d); systems_strip(&d);
-    fputs("<text x='24' y='826' class='sub'>仪表只读  /  数据过期自动清除  /  训练台架显示</text></svg>\n",f);
+    fputs("<text x='24' y='826' class='sub'>仪表只读  /  数据过期自动清除  /  训练台架显示</text>",f);
+    fputs("<g transform='translate(0 840)'><rect width='1280' height='840' fill='#0b100f'/>"
+          "<text x='24' y='50' class='title'>航路导航显示</text>",f);
+    fprintf(f,"<text x='1254' y='50' text-anchor='end' class='status'>台架时间 %.2f s</text>",
+            state->bus.tick_ms*.001);
+    cockpit_navigation(f,state);
+    fputs("</g><g transform='translate(0 1680)'><rect width='1280' height='840' fill='#0b100f'/>"
+          "<text x='24' y='50' class='title'>机载系统显示</text>",f);
+    fprintf(f,"<text x='1254' y='50' text-anchor='end' class='status'>台架时间 %.2f s</text>",
+            state->bus.tick_ms*.001);
+    cockpit_aircraft_systems(f,state);
+    fputs("</g></svg>\n",f);
     return !ferror(f);
 }

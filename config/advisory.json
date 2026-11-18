@@ -1,6 +1,6 @@
 {
   "profile": "expanded",
-  "service_id": 59,
+  "service_id": 62,
   "domain": "analytics",
   "period_ms": 500,
   "inputs": [

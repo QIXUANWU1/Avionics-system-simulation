@@ -2,18 +2,16 @@
 
 ## 中文
 
-59 个 C 应用服务分配到六个逻辑板卡角色，包含合成飞控闭环、主备姿态、导航、机电、气象和座舱。Linux 默认使用 Cyclone DDS，支持 UDP 对照。中文座舱只读订阅经模拟传感器和应用处理的数据，显示过期时清空数值。Genann 气象是旁路，不计入 59 个服务。
+62 个 C 服务覆盖合成飞控、采集、导航、气象和机载系统。中文座舱提供主飞行、航路导航和系统三页。Linux 台架使用 Cyclone DDS，Python 提供本地预览网页。五板目标部署包含三块天脉 3 容器版与两块 Linux 板。[五板架构](docs/五板架构.md)
 
-- Ubuntu 22.04 安装 `gcc libc6-dev cyclonedds-dev cyclonedds-tools`，运行 `bash build.sh && bash check_offline.sh`。
-- `bash tools/preview_panel.sh 30`：运行 30 秒本地 DDS 台架；浏览器打开命令打印的 `index.html`，查看实时座舱。
-- `bash check_loopback.sh dds`：联测并生成抓包、显示快照和只读健康检查结果。用 `udp` 参数做对照。
-- Windows 可运行 `启动研究平台.ps1` 生成全容器计划，或用 `-Mode process` 生成全进程计划。可用 `-BuildOnly` 在 WSL 中编译和检查。
+- 容器入口 `docker build -t ima-avionics-lab:local .`，再运行 `bash tools/preview_container.sh 60`。用浏览器打开命令打印的地址，按 1、2、3 切页。
+- 离线检查 `bash build.sh && bash check_offline.sh`。Ubuntu 22.04 需要 `gcc libc6-dev cyclonedds-dev cyclonedds-tools`。
+- Windows 用户可运行 `启动研究平台.ps1` 导出规划，或使用 `-BuildOnly` 在 WSL 构建与检查。
 
 ## English
 
-59 C application services map to six logical boards. They cover a synthetic flight-control loop, dual attitude inputs, navigation, aircraft systems, weather, and the flight deck. Linux uses Cyclone DDS by default, with a UDP comparison mode. The Chinese flight deck subscribes to processed synthetic sensor outputs and blanks stale values. The Genann weather advisory is separate from the 59 services.
+The bench has 62 C services covering synthetic flight control, acquisition, navigation, weather and aircraft systems. The three display pages show primary flight data, navigation and aircraft systems. Linux uses Cyclone DDS and a Python preview server. [Five-board architecture](docs/五板架构.md)
 
-- On Ubuntu 22.04, install `gcc libc6-dev cyclonedds-dev cyclonedds-tools` and run `bash build.sh && bash check_offline.sh`.
-- `bash tools/preview_panel.sh 30`: run a 30-second local DDS bench and open the printed `index.html` in a browser.
-- `bash check_loopback.sh dds`: verify the running data paths, display snapshots, and passive health reader. Use `udp` for comparison.
-- The Windows PowerShell launcher prints an all-container or all-process plan. `-BuildOnly` builds and checks under WSL.
+- Build with `docker build -t ima-avionics-lab:local .` and run `bash tools/preview_container.sh 60`. Open the printed URL and use keys 1, 2 and 3 to switch pages.
+- For offline checks, run `bash build.sh && bash check_offline.sh`. Ubuntu 22.04 requires `gcc libc6-dev cyclonedds-dev cyclonedds-tools`.
+- Use the Windows PowerShell launcher to export the plan. Use `-BuildOnly` for a WSL build and offline checks.

@@ -97,7 +97,7 @@ static int read_panel(const char *file,int live)
     const int good=n&&feof(f)&&!ferror(f);
     fclose(f);
     b[n]='\0';
-    if (!good||!strstr(b,"DDS 在线")||!strstr(b,"</svg>")) return 0;
+    if (!good||!strstr(b,"DDS 在线")||!strstr(b,"</svg>") || !strstr(b,"id='navigation'") || !strstr(b,"id='systems'")) return 0;
     if (!live) return strstr(b,"姿态数据无效")&&strstr(b,"画面有效")==NULL;
     const char speed_tag[]="<text x='112' y='390' class='tape middle'>";
     const char *speed=strstr(b,speed_tag);
@@ -160,7 +160,9 @@ static int check_trace(FILE *trace)
         {SID_imu_backup,SID_shadow_effort},{SID_shadow_effort,SID_control_agreement},
         {SID_cabin_lighting,SID_camera_frame_source},{SID_bus_load,SID_electrical_display},
         {SID_plant_motion,SID_gnss_fixture},{SID_gnss_fixture,SID_navigation_display},
-        {SID_gear_position_fixture,SID_gear_indication}
+        {SID_gear_position_fixture,SID_gear_indication},
+        {SID_plant_motion,SID_position_fixture},{SID_position_fixture,SID_gnss_position},
+        {SID_gnss_position,SID_route_indication}
     };
     for (size_t i=0;i<sizeof required/sizeof *required;i++) {
         const unsigned src=required[i][0],dst=required[i][1],d=ima_owner[PROFILE][dst];

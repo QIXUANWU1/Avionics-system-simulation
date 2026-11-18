@@ -6,6 +6,14 @@ static inline int ima_display_service(unsigned id)
 {
     switch (id) {
     case SID_primary_display:
+    case SID_gnss_position:
+    case SID_route_indication:
+    case SID_crew_indication:
+    case SID_airdata_crosscheck:
+    case SID_brake_indication:
+    case SID_radio_indication:
+    case SID_cabin_indication:
+    case SID_gear_position_fixture:
     case SID_display_airdata:
     case SID_track_rate:
     case SID_flight_mode:

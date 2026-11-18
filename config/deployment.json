@@ -2,7 +2,7 @@
   "schema": "civil-fixed-wing-lab/3",
   "scenario": "synthetic_civil_fixed_wing_bench",
   "sim_step_ms": 10,
-  "wire_version": 4,
+  "wire_version": 5,
   "domains": [
     {
       "index": 0,
@@ -17,7 +17,8 @@
         14,
         29,
         36,
-        38
+        38,
+        60
       ],
       "board": "A"
     },
@@ -28,9 +29,10 @@
       "services": [
         11,
         12,
-        19
+        19,
+        59
       ],
-      "board": "C"
+      "board": "A"
     },
     {
       "index": 2,
@@ -45,7 +47,7 @@
         54,
         55
       ],
-      "board": "C"
+      "board": "B"
     },
     {
       "index": 3,
@@ -58,7 +60,8 @@
         40,
         41,
         48,
-        51
+        51,
+        61
       ],
       "board": "D"
     },
@@ -91,7 +94,7 @@
         50,
         57
       ],
-      "board": "F"
+      "board": "E"
     },
     {
       "index": 6,
@@ -114,7 +117,7 @@
         52,
         58
       ],
-      "board": "E"
+      "board": "A"
     },
     {
       "index": 7,
@@ -133,39 +136,49 @@
         53,
         56
       ],
-      "board": "B"
+      "board": "C"
     }
   ],
   "boards": [
     {
       "id": "A",
-      "role": "主采集与输入状态",
-      "proposed_os": "SDK待核对"
+      "role": "采集、机载系统与台架合成对象",
+      "proposed_os": "Tianmai 3 container edition"
     },
     {
       "id": "B",
-      "role": "备用姿态与影子计算",
-      "proposed_os": "SDK待核对"
+      "role": "主飞控与姿态选择",
+      "proposed_os": "Tianmai 3 container edition"
     },
     {
       "id": "C",
-      "role": "飞控应用；台架飞机模型同域角色下单列",
-      "proposed_os": "SDK待核对"
+      "role": "备用惯性采样与影子计算",
+      "proposed_os": "Tianmai 3 container edition"
     },
     {
       "id": "D",
-      "role": "导航、大气和气象数据",
-      "proposed_os": "Linux lab"
+      "role": "导航、气象与数据质量处理",
+      "proposed_os": "Linux OCI"
     },
     {
       "id": "E",
-      "role": "动力、供电和机电系统",
-      "proposed_os": "SDK待核对"
-    },
-    {
-      "id": "F",
-      "role": "座舱显示和气象旁路",
-      "proposed_os": "Linux lab"
+      "role": "显示页、只读记录及天气旁路",
+      "proposed_os": "Linux OCI"
     }
+  ],
+  "native_service_keys": [
+    "imu_sample",
+    "airdata_sample",
+    "imu_backup"
+  ],
+  "bench_fixture_keys": [
+    "pilot_axes",
+    "pilot_levers",
+    "plant_attitude",
+    "plant_motion",
+    "actuator_response",
+    "position_fixture",
+    "gear_position_fixture",
+    "echo_fixture"
   ]
 }

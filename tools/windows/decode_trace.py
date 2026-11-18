@@ -13,7 +13,7 @@ def records(path):
             if len(b)!=TRACE.size:raise ValueError('truncated record')
             code,ns,wire=TRACE.unpack(b)
             if code not in NAMES:raise ValueError('event code')
-            decoded=unpack(wire)
+            decoded=unpack(wire, legacy_trace=True)
             if decoded['kind']!=code:raise ValueError('event code mismatch')
             yield dict(event=NAMES[code],host_ns=ns,**decoded)
 if __name__=='__main__':

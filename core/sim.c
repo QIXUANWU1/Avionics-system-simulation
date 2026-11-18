@@ -28,6 +28,9 @@ void sim_service(const Frame *in,int id,Frame *out,ReadObserver observer,void *c
     *o=(Sample){.time_ms=in->tick_ms,.sequence=in->samples[id].sequence+1u};
     ModelStep step={.id=(unsigned)id,.tick_ms=in->tick_ms,.required=(unsigned)s->ninputs,
                     .previous=sim_sample_fresh(in,(unsigned)id)?&in->samples[id]:NULL};
+    /* Position retains its last coordinates through a gap while publishing invalid data. */
+    if (id==SID_position_fixture && in->samples[id].sequence)
+        step.previous=&in->samples[id];
     for (int k=0;k<s->ninputs;k++) {
         const int producer=s->inputs[k];
         const Sample *sample=&in->samples[producer];
@@ -38,7 +41,8 @@ void sim_service(const Frame *in,int id,Frame *out,ReadObserver observer,void *c
             observer(&event,ctx);
         }
     }
-    if (s->group==8) o->valid=extended_systems_step(&step,o);
+    if (s->group==9) o->valid=navigation_step(&step,o);
+    else if (s->group==8) o->valid=extended_systems_step(&step,o);
     else if (id>=SID_airdata_words && id<=SID_display_airdata) o->valid=airdata_step(&step,o);
     else if (s->group==0 || s->group==5 || s->group==6) o->valid=flight_step(&step,o);
     else if (s->group==7) o->valid=systems_step(&step,o);

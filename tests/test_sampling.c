@@ -11,7 +11,7 @@ int main(void)
     Message m;
     uint8_t b[WIRE_SIZE];
     wire_encode(b,&original);
-    CHECK(!memcmp(b,"IMAR\x04\x01\x08\x00\x67\x45\x23\x01",12));
+    CHECK(!memcmp(b,"IMAR\x05\x01\x08\x00\x67\x45\x23\x01",12));
     CHECK(!wire_decode(b,sizeof b,&m) && m.sequence==original.sequence && m.model_ms==original.model_ms &&
           m.source_ns==original.source_ns && m.v[1]==original.v[1]);
     CHECK(wire_decode(b,sizeof b-1,&m)!=0);
