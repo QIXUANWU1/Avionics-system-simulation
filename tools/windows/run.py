@@ -12,7 +12,7 @@ EVENT = {1:'publish',2:'progress',3:'consume',4:'accepted_receive',5:'advisory'}
 def unpack(data, *, legacy_trace=False):
     if len(data)!=WIRE.size: raise ValueError('length')
     magic,ver,kind,sid,epoch,seq,ms,flags,ns,a,b,c=WIRE.unpack(data)
-    if magic!=b'IMAR' or (ver!=5 and not (legacy_trace and ver==4)) or kind not in EVENT or not all(map(math.isfinite,(a,b,c))):
+    if magic!=b'IMAR' or (ver!=6 and not (legacy_trace and ver in (4,5))) or kind not in EVENT or not all(map(math.isfinite,(a,b,c))):
         raise ValueError('wire')
     return dict(kind=kind,sid=sid,epoch=epoch,seq=seq,model_ms=ms,flags=flags,source_ns=ns,v=[a,b,c])
 

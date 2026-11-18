@@ -2,7 +2,7 @@
   "schema": "civil-fixed-wing-lab/3",
   "scenario": "synthetic_civil_fixed_wing_bench",
   "sim_step_ms": 10,
-  "wire_version": 5,
+  "wire_version": 6,
   "domains": [
     {
       "index": 0,
@@ -115,7 +115,8 @@
         44,
         45,
         52,
-        58
+        58,
+        62
       ],
       "board": "A"
     },
@@ -179,6 +180,7 @@
     "actuator_response",
     "position_fixture",
     "gear_position_fixture",
-    "echo_fixture"
+    "echo_fixture",
+    "weight_on_wheels_fixture"
   ]
 }

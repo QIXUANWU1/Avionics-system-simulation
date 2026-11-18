@@ -82,9 +82,9 @@ static void run_profile(unsigned p)
             bank_after_input=sample(&lab,p,SID_primary_display).v[0];
             assert(bank_after_input>7.0);
             assert(sample(&lab,p,SID_primary_display).v[1]>2);
-            const double indicated_airspeed=sample(&lab,p,SID_primary_display).v[2];
+            const double indicated_airspeed=sample(&lab,p,SID_airdata_decoded).v[1];
             assert(indicated_airspeed>90 && indicated_airspeed<200);
-            assert(fabs(indicated_airspeed-sample(&lab,p,SID_airdata_decoded).v[1])<1.0);
+
             const Sample nav=sample(&lab,p,SID_navigation_display), gps=sample(&lab,p,SID_gnss_fixture);
             assert(nav.v[1]>heading_before && fabs(nav.v[1]-gps.v[1])<1);
             assert(fabs(nav.v[2]-gps.v[2])<.5);

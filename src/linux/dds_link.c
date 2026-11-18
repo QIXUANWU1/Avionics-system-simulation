@@ -44,7 +44,7 @@ ImaDdsLink *ima_dds_open(unsigned base,int display_reader,int display_writer)
     dds_qset_durability(q,DDS_DURABILITY_VOLATILE);
     int ok=1;
     if (!display_reader) {
-        const dds_entity_t topic=dds_create_topic(link->participant,&imalab_State_desc,"ImalabStateV5",NULL,NULL);
+        const dds_entity_t topic=dds_create_topic(link->participant,&imalab_State_desc,"ImalabStateV6",NULL,NULL);
         ok=entity_ok(topic,"state topic");
         if (ok) {
             link->reader=dds_create_reader(link->participant,topic,q,NULL);
@@ -54,7 +54,7 @@ ImaDdsLink *ima_dds_open(unsigned base,int display_reader,int display_writer)
         }
     }
     if (ok&&(display_reader||display_writer)) {
-        const dds_entity_t topic=dds_create_topic(link->participant,&imalab_State_desc,"ImalabDisplayV5",NULL,NULL);
+        const dds_entity_t topic=dds_create_topic(link->participant,&imalab_State_desc,"ImalabDisplayV6",NULL,NULL);
         ok=entity_ok(topic,"display topic");
         if (ok&&display_reader) {
             link->reader=dds_create_reader(link->participant,topic,q,NULL);

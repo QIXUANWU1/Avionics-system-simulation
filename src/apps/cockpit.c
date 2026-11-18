@@ -26,6 +26,7 @@ static void attitude(Draw *d)
 {
     FILE *f=d->f;
     const Sample *att=get(d,SID_primary_display),*height=get(d,SID_display_airdata);
+    const Sample *speed=get(d,SID_airdata_decoded);
     const Sample *nav=get(d,SID_track_rate),*mode=get(d,SID_flight_mode);
     box(f,24,99,731,579);
     fputs("<text x='47' y='135' class='label'>主飞行显示  PFD</text>",f);
@@ -51,8 +52,8 @@ static void attitude(Draw *d)
     }
     fputs("<path d='M383 218h14l-7 12z' fill='#d9eff7'/>",f);
     const int tape_x[2]={50,604};
-    const Sample *inputs[2]={att,height};
-    const unsigned slots[2]={2,0};
+    const Sample *inputs[2]={speed,height};
+    const unsigned slots[2]={1,0};
     const double scale[2]={10,100};
     for (unsigned i=0;i<2;i++) {
         const int x=tape_x[i];

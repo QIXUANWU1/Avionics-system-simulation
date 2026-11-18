@@ -134,12 +134,12 @@ void cockpit_aircraft_systems(FILE *out, const CockpitState *state)
     const char *gear_state = !gear?"无数据":gear->v[0]==1?"放下":gear->v[0]==0?"收上":"转换中";
     indicator(out, 885, 187, "起落架位置", gear_state, gear && gear->v[0]!=2);
     value(out, 1080, 187, "机构行程", travel, 0, 100, 0, "%.0f%%");
-    const int gear_not_down = gear && gear->v[0]!=1;
     const char *brake_state = !brake ? "无数据" :
-                              gear_not_down ? "起落架未放下" :
+                              brake->v[1]!=1 ? "空中" :
+                              brake->v[2]!=1 ? "液压数据缺失" :
                               brake->v[0]==1 ? "可用" : "不可用";
     indicator(out, 885, 267, "地面刹车状态", brake_state,
-              brake && (gear_not_down || brake->v[0]==1));
+              brake && (brake->v[1]!=1 || brake->v[0]==1));
     value(out, 885, 347, "客舱压力高度", cabin, 0, 1, 0, "%.0f ft");
     value(out, 1080, 347, "客舱压差", cabin, 1, 1, 0, "%.1f kPa");
     value(out, 885, 427, "客舱温度", vent, 0, 1, -273.15, "%.1f °C");

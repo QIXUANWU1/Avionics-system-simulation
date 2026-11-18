@@ -155,14 +155,17 @@ static int check_trace(FILE *trace)
         {SID_plant_attitude,SID_imu_sample},{SID_imu_sample,SID_attitude_select},{SID_attitude_select,SID_attitude_estimate},
         {SID_attitude_estimate,SID_control_effort},{SID_attitude_estimate,SID_primary_display},
         {SID_plant_motion,SID_baro_fixture},{SID_fuel_quantity,SID_engine_display},
-        {SID_airdata_words,SID_airdata_decoded},{SID_airdata_decoded,SID_primary_display},
+        {SID_airdata_words,SID_airdata_decoded},{SID_airdata_decoded,SID_display_airdata},
         {SID_bus_status,SID_flight_mode},{SID_imu_backup,SID_attitude_select},
         {SID_imu_backup,SID_shadow_effort},{SID_shadow_effort,SID_control_agreement},
         {SID_cabin_lighting,SID_camera_frame_source},{SID_bus_load,SID_electrical_display},
         {SID_plant_motion,SID_gnss_fixture},{SID_gnss_fixture,SID_navigation_display},
         {SID_gear_position_fixture,SID_gear_indication},
         {SID_plant_motion,SID_position_fixture},{SID_position_fixture,SID_gnss_position},
-        {SID_gnss_position,SID_route_indication}
+        {SID_gnss_position,SID_route_indication},
+        {SID_gear_position_fixture,SID_weight_on_wheels_fixture},
+        {SID_weight_on_wheels_fixture,SID_brake_indication},
+        {SID_weight_on_wheels_fixture,SID_gear_position_fixture}
     };
     for (size_t i=0;i<sizeof required/sizeof *required;i++) {
         const unsigned src=required[i][0],dst=required[i][1],d=ima_owner[PROFILE][dst];

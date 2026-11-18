@@ -6,6 +6,7 @@ static inline int ima_display_service(unsigned id)
 {
     switch (id) {
     case SID_primary_display:
+    case SID_airdata_decoded:
     case SID_gnss_position:
     case SID_route_indication:
     case SID_crew_indication:

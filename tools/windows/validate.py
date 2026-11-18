@@ -18,7 +18,7 @@ class LabChecks(unittest.TestCase):
 
     def test_inventory_and_routes(self):
         profiles,catalog=layout.load_profiles()
-        self.assertEqual(len(catalog),62)
+        self.assertEqual(len(catalog),63)
         for profile,cfg in profiles.items():
             with self.subTest(profile=profile):
                 n=len(catalog)
@@ -82,7 +82,7 @@ class LabChecks(unittest.TestCase):
         self.assertEqual(len(self.cfg['fanout']),n)
 
     def test_binary_rejects_old_or_invalid_wire(self):
-        msg=run.WIRE.pack(b'IMAR',5,1,0,11,12,20,1,2000,1,2,3)
+        msg=run.WIRE.pack(b'IMAR',6,1,0,11,12,20,1,2000,1,2,3)
         self.assertEqual(run.unpack(msg)['v'],[1,2,3])
         for bad in (msg[:-1],msg[:4]+b'\x02'+msg[5:],msg[:32]+struct.pack('<d',float('nan'))+msg[40:]):
             with self.assertRaises(ValueError):run.unpack(bad)

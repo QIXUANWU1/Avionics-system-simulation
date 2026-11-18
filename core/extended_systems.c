@@ -55,9 +55,9 @@ int extended_systems_step(const ModelStep *s,Sample *o)
     if (s->live!=s->required) return 0;
     switch (s->id) {
     case SID_airdata_mach: {
-        if (b->v[1]<180||b->v[1]>340||b->v[2]<=0||c->v[1]<0) return 0;
-        const double tas=(c->v[1]/1.943844492440605)*sqrt(1.225/b->v[2]);
-        o->v[0]=tas/sqrt(1.4*287.05*b->v[1]); o->v[1]=tas*1.943844492440605; o->v[2]=a->v[0];
+        if (a->v[1]<180||a->v[1]>340||a->v[2]<=0||b->v[1]<0) return 0;
+        const double tas=(b->v[1]/1.943844492440605)*sqrt(1.225/a->v[2]);
+        o->v[0]=tas/sqrt(1.4*287.05*a->v[1]); o->v[1]=tas*1.943844492440605; o->v[2]=b->v[0];
         break;
     }
     case SID_track_rate:
@@ -75,7 +75,7 @@ int extended_systems_step(const ModelStep *s,Sample *o)
         o->v[2]=o->v[0]*o->v[1]; break;
     case SID_hydraulic_reserve:
         o->v[0]=clip_between(a->v[0],0,1)*155; /* bench pressure proxy */
-        o->v[1]=a->v[1]==1; o->v[2]=b->v[1]==1 && c->v[0]==1; break;
+        o->v[1]=a->v[1]==1; break;
     case SID_cabin_pressure: {
         const double outside=b->v[0];
         if (outside<=0 || outside>1100) return 0;
@@ -97,7 +97,7 @@ int extended_systems_step(const ModelStep *s,Sample *o)
         break;
     case SID_airdata_crosscheck:
         o->v[0]=fabs(a->v[0]-b->v[0]*3.280839895013123);
-        o->v[1]=a->v[2]; o->v[2]=o->v[0]<150 && c->v[0]<.9; break;
+        o->v[1]=a->v[2]; o->v[2]=o->v[0]<150; break;
     case SID_electrical_display:
         o->v[0]=a->v[0]; o->v[1]=a->v[1]; o->v[2]=b->v[2]; break;
     case SID_outside_temperature_display:

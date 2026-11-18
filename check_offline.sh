@@ -14,3 +14,5 @@ gcc -std=c11 -O2 -Wall -Wextra -Werror -fsanitize=undefined -fno-sanitize-recove
 build/test-extended
 gcc -std=c11 -O2 -Wall -Wextra -Werror -I. -Iinclude tests/test_health.c -o build/test-health
 build/test-health
+gcc -std=c11 -O2 -Wall -Wextra -Werror -I. -Iinclude -Iconfig -fsanitize=undefined -fno-sanitize-recover=all tests/test_rtos_local_dds.c src/comm/rtos_local_dds.c core/*.c -lm -o build/test-rtos-local-dds
+build/test-rtos-local-dds

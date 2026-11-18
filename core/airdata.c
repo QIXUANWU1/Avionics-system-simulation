@@ -32,7 +32,7 @@ static int exact_u32(double x,uint32_t *raw)
 
 int airdata_step(const ModelStep *s,Sample *o)
 {
-    const Sample *a=s->input[0],*b=s->input[1],*p=s->previous;
+    const Sample *a=s->input[0],*p=s->previous;
     switch (s->id) {
     case SID_airdata_words: {
         /* Private test labels and scaling, not an aircraft label map. */
@@ -66,8 +66,8 @@ int airdata_step(const ModelStep *s,Sample *o)
         o->v[2]=(o->v[0]*100)/(287.05*o->v[1]);
         return 1;
     case SID_display_airdata:
-        if (!a || !b) return 0;
-        o->v[0]=a->v[0]; o->v[2]=b->v[1];
+        if (!a) return 0;
+        o->v[0]=a->v[0];
         if (p && s->tick_ms>p->time_ms) {
             const double rate=(o->v[0]-p->v[0])*60000/(double)(s->tick_ms-p->time_ms);
             o->v[1]=.75*p->v[1]+.25*rate;
