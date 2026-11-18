@@ -16,6 +16,8 @@ static inline double axis(double x) { return clip_between(x,-1,1); }
 double isa_temperature(double elevation_m);
 double airspeed_proxy_mps(double true_mps,double elevation_m);
 int airdata_step(const ModelStep *,Sample *);
+double demo_attitude_scale(unsigned axis_index);
+int extended_systems_step(const ModelStep *,Sample *);
 int flight_step(const ModelStep *,Sample *);
 int systems_step(const ModelStep *,Sample *);
 int information_step(const ModelStep *,Sample *);

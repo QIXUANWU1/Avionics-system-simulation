@@ -5,6 +5,8 @@
 /* A desktop signal-response fixture, with no aircraft gains or I/O mapping. */
 static const double demo_angle_deg[3]={35,20,18};
 
+double demo_attitude_scale(unsigned i) { return demo_angle_deg[i]; }
+
 static int mode_active(const Sample *s)
 {
     return s && (s->v[0]==MODE_MANUAL || s->v[0]==MODE_CENTER);
@@ -57,8 +59,12 @@ int flight_step(const ModelStep *s,Sample *o)
     }
     if (s->live!=s->required) return 0;
     switch (s->id) {
-    case SID_baro_fixture: o->v[0]=a->v[0]-.5; break;
-    case SID_gnss_fixture: o->v[0]=a->v[0]+1.5; break;
+    case SID_baro_fixture: o->v[0]=round((a->v[0]-.5)*4)*.25; break;
+    case SID_gnss_fixture:
+        o->v[0]=round((a->v[0]+1.5)*2)*.5;
+        o->v[1]=fmod(round(a->v[2]*10)*.1+360,360); /* synthetic ground track, zero wind */
+        o->v[2]=round(a->v[1]*10)*.1;
+        break;
     case SID_imu_sample:
         for (unsigned i=0;i<3;i++) o->v[i]=round(axis(a->v[i])*demo_angle_deg[i]*100.)*.01;
         break;

@@ -1,8 +1,8 @@
 {
-  "schema": "civil-fixed-wing-lab/2",
+  "schema": "civil-fixed-wing-lab/3",
   "scenario": "synthetic_civil_fixed_wing_bench",
   "sim_step_ms": 10,
-  "wire_version": 3,
+  "wire_version": 4,
   "domains": [
     {
       "index": 0,
@@ -18,7 +18,8 @@
         29,
         36,
         38
-      ]
+      ],
+      "board": "A"
     },
     {
       "index": 1,
@@ -28,7 +29,8 @@
         11,
         12,
         19
-      ]
+      ],
+      "board": "C"
     },
     {
       "index": 2,
@@ -39,8 +41,11 @@
         16,
         17,
         18,
-        30
-      ]
+        30,
+        54,
+        55
+      ],
+      "board": "C"
     },
     {
       "index": 3,
@@ -49,8 +54,13 @@
       "services": [
         3,
         26,
-        37
-      ]
+        37,
+        40,
+        41,
+        48,
+        51
+      ],
+      "board": "D"
     },
     {
       "index": 4,
@@ -59,7 +69,8 @@
       "services": [
         4,
         5
-      ]
+      ],
+      "board": "D"
     },
     {
       "index": 5,
@@ -73,8 +84,14 @@
         27,
         28,
         34,
-        39
-      ]
+        39,
+        46,
+        47,
+        49,
+        50,
+        57
+      ],
+      "board": "F"
     },
     {
       "index": 6,
@@ -89,8 +106,15 @@
         31,
         32,
         33,
-        35
-      ]
+        35,
+        42,
+        43,
+        44,
+        45,
+        52,
+        58
+      ],
+      "board": "E"
     },
     {
       "index": 7,
@@ -98,7 +122,50 @@
       "name": "采集状态监视",
       "services": [
         8
-      ]
+      ],
+      "board": "A"
+    },
+    {
+      "index": 8,
+      "id": "shadow_lane",
+      "name": "备用采样和影子计算",
+      "services": [
+        53,
+        56
+      ],
+      "board": "B"
+    }
+  ],
+  "boards": [
+    {
+      "id": "A",
+      "role": "主采集与输入状态",
+      "proposed_os": "SDK待核对"
+    },
+    {
+      "id": "B",
+      "role": "备用姿态与影子计算",
+      "proposed_os": "SDK待核对"
+    },
+    {
+      "id": "C",
+      "role": "飞控应用；台架飞机模型同域角色下单列",
+      "proposed_os": "SDK待核对"
+    },
+    {
+      "id": "D",
+      "role": "导航、大气和气象数据",
+      "proposed_os": "Linux lab"
+    },
+    {
+      "id": "E",
+      "role": "动力、供电和机电系统",
+      "proposed_os": "SDK待核对"
+    },
+    {
+      "id": "F",
+      "role": "座舱显示和气象旁路",
+      "proposed_os": "Linux lab"
     }
   ]
 }

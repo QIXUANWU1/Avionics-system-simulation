@@ -1,13 +1,14 @@
 param(
     [ValidateSet('baseline','expanded')][string]$Profile = 'expanded',
     [ValidateSet('oci','process')][string]$Mode = 'oci',
+    [ValidateSet('dds','udp')][string]$Transport = 'dds',
     [switch]$Observe,
     [switch]$BuildOnly,
     [string]$Distro = 'Ubuntu-22.04'
 )
 $ErrorActionPreference = 'Stop'
 if (-not $BuildOnly) {
-    $planArgs = @('--profile',$Profile,'--mode',$Mode)
+    $planArgs = @('--profile',$Profile,'--mode',$Mode,'--transport',$Transport)
     if ($Observe) { $planArgs += '--observe' }
     & python -X utf8 (Join-Path $PSScriptRoot 'tools/windows/run.py') @planArgs
     if ($LASTEXITCODE -ne 0) { throw 'Static plan validation failed.' }

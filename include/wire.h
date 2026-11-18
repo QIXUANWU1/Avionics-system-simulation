@@ -6,7 +6,7 @@
 #include <float.h>
 _Static_assert(sizeof(double)==8 && DBL_MANT_DIG==53 && DBL_MAX_EXP==1024, "wire requires IEEE754 binary64");
 #define WIRE_SIZE 56
-#define WIRE_VERSION 3u
+#define WIRE_VERSION 4u
 #define KIND_SAMPLE 1
 #define KIND_PROGRESS 2
 #define KIND_CONSUME 3

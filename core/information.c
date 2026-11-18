@@ -42,10 +42,10 @@ int information_step(const ModelStep *s,Sample *o)
     case SID_primary_display:
         o->v[0]=a->v[0]; o->v[1]=a->v[1]; o->v[2]=b->v[1]; break;
     case SID_navigation_display:
-        o->v[0]=a->v[0]; o->v[1]=b->v[2]; o->v[2]=b->v[1]; break;
+        o->v[0]=a->v[0]; o->v[1]=b->v[1]; o->v[2]=b->v[2]; break;
     case SID_engine_display:
         if (s->input[2]->v[1]!=1.0) return 0;
-        o->v[0]=a->v[0]; o->v[1]=a->v[1]; o->v[2]=b->v[1]; break;
+        o->v[0]=a->v[0]; o->v[1]=a->v[1]; o->v[2]=b->v[0]; break;
     case SID_radio_indication:
         o->v[0]=a->v[1]==1.0; break;
     default: return 0;

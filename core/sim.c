@@ -38,7 +38,8 @@ void sim_service(const Frame *in,int id,Frame *out,ReadObserver observer,void *c
             observer(&event,ctx);
         }
     }
-    if (id>=SID_airdata_words) o->valid=airdata_step(&step,o);
+    if (s->group==8) o->valid=extended_systems_step(&step,o);
+    else if (id>=SID_airdata_words && id<=SID_display_airdata) o->valid=airdata_step(&step,o);
     else if (s->group==0 || s->group==5 || s->group==6) o->valid=flight_step(&step,o);
     else if (s->group==7) o->valid=systems_step(&step,o);
     else o->valid=information_step(&step,o);

@@ -1,0 +1,13 @@
+module imalab {
+  /* Keep one instance per service; do not encode raw endpoint packets in DDS. */
+  struct State {
+    @key unsigned short service_id;
+    unsigned short source_domain;
+    unsigned long epoch;
+    unsigned long sequence_no;
+    unsigned long model_ms;
+    unsigned long quality;
+    unsigned long long source_ns;
+    double value[3];
+  };
+};

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<title>固定翼航电软件台架 · 综合显示</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+html,body{margin:0;background:#0b100f;color:#dde9dd;font:15px "Microsoft YaHei","Noto Sans CJK SC",system-ui}
+main{max-width:1600px;margin:auto;text-align:center}
+img{display:block;width:100%;height:auto}
+p{padding:0 .8rem;color:#9bb8c6}
+</style>
+<main>
+<img id="panel" src="panel.svg" alt="本地固定翼航电仪表">
+<p id="status" role="status">正在读取本地仪表…</p>
+</main>
+<script>
+const panel = document.getElementById('panel');
+const status = document.getElementById('status');
+function refresh() {
+    const next = new Image();
+    next.onload = () => {
+        panel.src = next.src;
+        status.textContent = '本地仪表 · 正在显示合成传感器数据';
+        setTimeout(refresh, 200);
+    };
+    next.onerror = () => {
+        status.textContent = '等待仪表画面。请先启动本地预览程序。';
+        setTimeout(refresh, 600);
+    };
+    next.src = 'panel.svg?frame=' + Date.now();
+}
+refresh();
+</script>

@@ -1,6 +1,8 @@
 #define _POSIX_C_SOURCE 200809L
 #include "sample_route.h"
+#include "dds_link.h"
 #include "advisory.h"
+#include "display_feed.h"
 #include "generated_layout.h"
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -19,6 +21,7 @@ _Static_assert(ADVISORY_SID==IMA_ADVISORY_ID && ADVISORY_PERIOD_MS==IMA_ADVISORY
                ADVISORY_RADAR==IMA_ADVISORY_SOURCE_0 && ADVISORY_NAV==IMA_ADVISORY_SOURCE_1,"advisory binding");
 enum Reject { BAD_WIRE, BAD_ROUTE, BAD_SAMPLE, REJECT_COUNT };
 static int fd, observe;
+static ImaDdsLink *dds_link;
 static unsigned domain, profile;
 static uint32_t epoch, session;
 static uint64_t received, tx_drops, observation_drops, consumed, rejected[REJECT_COUNT], published, service_mask;
@@ -62,8 +65,12 @@ static void publish(const Message *m)
     const uint32_t mask = ima_fanout[profile][m->sid];
     published++;
     service_mask |= UINT64_C(1) << m->sid;
-    for (unsigned i=0; i<ima_domain_count[profile]; ++i) {
-        if ((mask & (UINT32_C(1) << i)) && !transmit(b, &destinations[i])) tx_drops++;
+    if (dds_link) {
+        if (mask && !ima_dds_write(dds_link,domain,m)) tx_drops++;
+        if (ima_display_service(m->sid) && !ima_dds_display_write(dds_link,domain,m)) observation_drops++;
+    } else {
+        for (unsigned i=0; i<ima_domain_count[profile]; ++i)
+            if ((mask & (UINT32_C(1) << i)) && !transmit(b,&destinations[i])) tx_drops++;
     }
     if (observe && !transmit(b, &collector)) observation_drops++;
 }
@@ -76,6 +83,31 @@ static void on_read(const ReadEvent *e, void *ctx)
         .source_ns=now_ns(),.v={(double)e->source_ms,(double)e->status,0}};
     mirror(&m);
 }
+static void observe_rx(enum ImaRx result,Message *m)
+{
+    if (result!=IMA_RX_OK) {
+        rejected[result==IMA_RX_BAD_WIRE?BAD_WIRE:result==IMA_RX_BAD_ROUTE?BAD_ROUTE:BAD_SAMPLE]++;
+        return;
+    }
+    received++;
+    if (observe) {
+        m->kind=KIND_RECEIVE; m->flags=domain; m->epoch=epoch; m->source_ns=now_ns();
+        mirror(m);
+    }
+}
+
+static void drain_dds(Frame *state,ImaSampleRoute *route,uint32_t ms)
+{
+    for (unsigned n=0;n<RX_LIMIT;n++) {
+        unsigned source;
+        Message m;
+        const int result=ima_dds_read(dds_link,&source,&m);
+        if (result<=0) { if (result<0) rejected[BAD_WIRE]++; break; }
+        if (m.sid<SIM_SERVICES && !(ima_fanout[profile][m.sid]&(UINT32_C(1)<<domain))) continue;
+        observe_rx(ima_route_accept_message(route,source,&m,ms,state),&m);
+    }
+}
+
 static void drain(Frame *state, ImaSampleRoute *route, uint32_t ms)
 {
     for (int n=0; n<RX_LIMIT; ++n) {
@@ -92,16 +124,7 @@ static void drain(Frame *state, ImaSampleRoute *route, uint32_t ms)
                             ?ntohs(from.sin_port):0;
         const unsigned first=ntohs(destinations[0].sin_port);
         const unsigned source=port>=first?port-first:UINT32_MAX;
-        const enum ImaRx result=ima_route_accept(route,source,b,(int)len,ms,state,&m);
-        if (result!=IMA_RX_OK) {
-            rejected[result==IMA_RX_BAD_WIRE?BAD_WIRE:result==IMA_RX_BAD_ROUTE?BAD_ROUTE:BAD_SAMPLE]++;
-            continue;
-        }
-        received++;
-        if (observe) {
-            m.kind=KIND_RECEIVE; m.flags=domain; m.epoch=epoch; m.source_ns=now_ns();
-            mirror(&m);
-        }
+        observe_rx(ima_route_accept(route,source,b,(int)len,ms,state,&m),&m);
     }
 }
 static int validate_layout(void)
@@ -143,10 +166,12 @@ static uint64_t argument(const char *str, uint64_t minimum, uint64_t maximum)
 int main(int argc, char **argv)
 {
     if (argc==2 && !strcmp(argv[1],"--check-layout")) return validate_layout();
-    if (argc!=8) {
-        fprintf(stderr,"usage: worker PROFILE_INDEX DOMAIN BASE_PORT SESSION_EPOCH START_NS DURATION_MS OBSERVE_0_OR_1\n");
+    if (argc!=8 && argc!=9) {
+        fprintf(stderr,"usage: worker PROFILE_INDEX DOMAIN BASE_PORT SESSION_EPOCH START_NS DURATION_MS OBSERVE_0_OR_1 [dds|udp]\n");
         return 2;
     }
+    const int use_dds=argc==8 || !strcmp(argv[8],"dds");
+    if (!use_dds && strcmp(argv[8],"udp")) return 2;
     profile=(unsigned)argument(argv[1],0,IMA_PROFILE_COUNT-1);
     domain=(unsigned)argument(argv[2],0,ima_domain_count[profile]-1);
     const unsigned base=(unsigned)argument(argv[3],1024,65000);
@@ -166,9 +191,13 @@ int main(int argc, char **argv)
     }
 
     const int has_advisory=ima_advisory_domain[profile]==(int)domain;
+    int has_display=has_advisory;
+    for (unsigned id=0;id<SIM_SERVICES;id++)
+        if (ima_owner[profile][id]==domain && ima_display_service(id)) has_display=1;
+    if (use_dds && !(dds_link=ima_dds_open(base,0,has_display))) { close(fd); return 3; }
     AdvisoryWorkspace *work=has_advisory?calloc(1,sizeof *work):NULL;
     AdvisoryModel *model=has_advisory&&work?ima_advisory_create():NULL;
-    if (has_advisory&&!model) { perror("advisory allocation");free(work);close(fd);return 3; }
+    if (has_advisory&&!model) { perror("advisory allocation");free(work);ima_dds_close(dds_link);close(fd);return 3; }
     uint32_t advisory_calls=0, advisory_available=0, advisory_score_ppm=0;
     Frame state;
     sim_init(&state);
@@ -181,7 +210,7 @@ int main(int argc, char **argv)
         const uint64_t since_ms=(before-start)/1000000u;
         if (since_ms>=duration) break;
         const uint32_t ms=(uint32_t)since_ms / SIM_STEP_MS * SIM_STEP_MS;
-        drain(&state,&route,ms);
+        if (dds_link) drain_dds(&state,&route,ms); else drain(&state,&route,ms);
         ++loop; state.tick_ms=ms;
         const Frame snapshot=state;
         for (unsigned i=0;i<SIM_SERVICES;++i) {
@@ -205,6 +234,11 @@ int main(int argc, char **argv)
             const Message m={.kind=KIND_ADVISORY,.sid=ADVISORY_SID,.epoch=epoch,.sequence=advisory_calls,
                 .model_ms=ms,.flags=domain*2u+a.valid,.source_ns=now_ns(),.v={(double)a.score,a.radar_sequence,a.nav_sequence}};
             mirror(&m);
+            if (dds_link) {
+                Message display=m;
+                display.flags=a.valid;
+                if (!ima_dds_display_write(dds_link,domain,&display)) observation_drops++;
+            }
         }
         if (observe && loop%10==0) {
             const Message m={.kind=KIND_PROGRESS,.sid=65535,.epoch=epoch,.sequence=loop,.model_ms=ms,
@@ -214,14 +248,15 @@ int main(int argc, char **argv)
         }
         until(start+(uint64_t)(ms+SIM_STEP_MS)*1000000u);
     }
-    fprintf(stderr,"domain=%u loops=%u published=%" PRIu64 " service_mask=%" PRIu64
+    fprintf(stderr,"transport=%s domain=%u loops=%u published=%" PRIu64 " service_mask=%" PRIu64
             " rx=%" PRIu64 " consume_observed=%" PRIu64 " reject_wire=%" PRIu64 " reject_route=%" PRIu64
             " reject_sample=%" PRIu64 " tx_drop=%" PRIu64 " observe_drop=%" PRIu64
             " advisory_calls=%u advisory_available=%u advisory_last_available_score_ppm=%u\n",
-            domain,loop,published,service_mask,received,consumed,rejected[BAD_WIRE],rejected[BAD_ROUTE],
+            use_dds?"dds":"udp",domain,loop,published,service_mask,received,consumed,rejected[BAD_WIRE],rejected[BAD_ROUTE],
             rejected[BAD_SAMPLE],tx_drops,observation_drops,advisory_calls,advisory_available,advisory_score_ppm);
     if (model) ima_advisory_destroy(model);
     free(work);
+    ima_dds_close(dds_link);
     close(fd);
     return 0;
 }

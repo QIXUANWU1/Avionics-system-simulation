@@ -1,17 +1,19 @@
-# Civil fixed-wing avionics lab / 固定翼航电仿真台架
+# Civil fixed-wing avionics lab / 民用固定翼航电台架
 
 ## 中文
 
-一个 Linux 上的民用固定翼 C 台架。操纵输入经过飞控、作动器和合成飞机模型，姿态反馈给飞控及主飞行显示；另有导航、动力、供电、油量、起落架、液压、环境和座舱状态。气象 Genann 小模型是独立旁路。飞机数据和控制响应均为合成。跨域使用静态采样，数据校验和路由与 Linux 收发分开。
+59 个 C 应用服务分配到六个逻辑板卡角色，包含合成飞控闭环、主备姿态、导航、机电、气象和座舱。Linux 默认使用 Cyclone DDS，支持 UDP 对照。中文座舱只读订阅经模拟传感器和应用处理的数据，显示过期时清空数值。Genann 气象是旁路，不计入 59 个服务。
 
-- `bash build.sh && bash check_offline.sh`：构建并离线检查。
-- `bash check_loopback.sh`：可选 Linux 回环联测，短时启动并回收测试进程。
-- Windows：`.\启动研究平台.ps1` 输出全容器计划；用 `-Mode process` 输出全进程计划；`-BuildOnly` 只编译和检查。镜像配方在 `Dockerfile`。
+- Ubuntu 22.04 安装 `gcc libc6-dev cyclonedds-dev cyclonedds-tools`，运行 `bash build.sh && bash check_offline.sh`。
+- `bash tools/preview_panel.sh 30`：运行 30 秒本地 DDS 台架；浏览器打开命令打印的 `index.html`，查看实时座舱。
+- `bash check_loopback.sh dds`：联测并生成抓包、显示快照和只读健康检查结果。用 `udp` 参数做对照。
+- Windows 可运行 `启动研究平台.ps1` 生成全容器计划，或用 `-Mode process` 生成全进程计划。可用 `-BuildOnly` 在 WSL 中编译和检查。
 
 ## English
 
-A Linux C bench for civil fixed-wing avionics. A synthetic flight-control loop links pilot input, actuation, aircraft response, sensor feedback, and the primary flight display. Navigation, propulsion and airframe indications share the same data path. The optional Genann weather workload is a side branch. Portable sample validation and static routing are separate from Linux transport.
+59 C application services map to six logical boards. They cover a synthetic flight-control loop, dual attitude inputs, navigation, aircraft systems, weather, and the flight deck. Linux uses Cyclone DDS by default, with a UDP comparison mode. The Chinese flight deck subscribes to processed synthetic sensor outputs and blanks stale values. The Genann weather advisory is separate from the 59 services.
 
-- `bash build.sh && bash check_offline.sh`: build and validate without launching services.
-- `bash check_loopback.sh`: optional short-lived Linux loopback integration test.
-- On Windows, `.\启动研究平台.ps1` prints the container plan, `-Mode process` selects the all-process plan, and `-BuildOnly` compiles and checks. See `Dockerfile` for the image recipe.
+- On Ubuntu 22.04, install `gcc libc6-dev cyclonedds-dev cyclonedds-tools` and run `bash build.sh && bash check_offline.sh`.
+- `bash tools/preview_panel.sh 30`: run a 30-second local DDS bench and open the printed `index.html` in a browser.
+- `bash check_loopback.sh dds`: verify the running data paths, display snapshots, and passive health reader. Use `udp` for comparison.
+- The Windows PowerShell launcher prints an all-container or all-process plan. `-BuildOnly` builds and checks under WSL.

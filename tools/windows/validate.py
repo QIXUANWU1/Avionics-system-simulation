@@ -18,7 +18,7 @@ class LabChecks(unittest.TestCase):
 
     def test_inventory_and_routes(self):
         profiles,catalog=layout.load_profiles()
-        self.assertEqual(len(catalog),40)
+        self.assertEqual(len(catalog),59)
         for profile,cfg in profiles.items():
             with self.subTest(profile=profile):
                 n=len(catalog)
@@ -36,7 +36,7 @@ class LabChecks(unittest.TestCase):
                 self.assertEqual([set(x) for x in cfg['fanout']],expected)
 
     def test_one_runtime_per_host(self):
-        for p,count in [('baseline',8),('expanded',14)]:
+        for p,count in [('baseline',9),('expanded',15)]:
             for mode,runtime in [('oci','linux-oci'),('process','linux-process')]:
                 cfg,_=run.make_plan(p,mode,observe=True)
                 self.assertEqual(cfg['counts'],{runtime:count})
@@ -73,7 +73,7 @@ class LabChecks(unittest.TestCase):
         self.assertEqual(len(self.cfg['fanout']),n)
 
     def test_binary_rejects_old_or_invalid_wire(self):
-        msg=run.WIRE.pack(b'IMAR',3,1,0,11,12,20,1,2000,1,2,3)
+        msg=run.WIRE.pack(b'IMAR',4,1,0,11,12,20,1,2000,1,2,3)
         self.assertEqual(run.unpack(msg)['v'],[1,2,3])
         for bad in (msg[:-1],msg[:4]+b'\x02'+msg[5:],msg[:32]+struct.pack('<d',float('nan'))+msg[40:]):
             with self.assertRaises(ValueError):run.unpack(bad)

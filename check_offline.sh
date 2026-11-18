@@ -10,3 +10,7 @@ gcc -std=c11 -O2 -Wall -Wextra -Werror -fsanitize=undefined -fno-sanitize-recove
 build/test-aircraft
 gcc -std=c11 -O2 -Wall -Wextra -Werror -fsanitize=undefined -fno-sanitize-recover=all -I. -Icore tests/test_airdata.c core/*.c -lm -o build/test-airdata
 build/test-airdata
+gcc -std=c11 -O2 -Wall -Wextra -Werror -fsanitize=undefined -fno-sanitize-recover=all -I. -Icore tests/test_extended.c core/*.c -lm -o build/test-extended
+build/test-extended
+gcc -std=c11 -O2 -Wall -Wextra -Werror -I. -Iinclude tests/test_health.c -o build/test-health
+build/test-health

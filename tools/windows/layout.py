@@ -34,11 +34,14 @@ def load_profiles():
     catalog=load_catalog()
     service_count=len(catalog)
     require(0<service_count<=64 and len({s['key'] for s in catalog})==service_count, 'catalog size / unique keys')
-    require(base['wire_version']==3, 'unsupported wire version')
+    require(base['wire_version']==4, 'unsupported wire version')
     for s in catalog:
         require(s['period_ms'] > 0 and s['period_ms'] % 10 == 0, 'period')
         require(s['max_age_ms']>=s['period_ms'], 'valid age / period')
         require(len(set(s['inputs'])) == len(s['inputs']) and all(0 <= i < service_count and i != s['id'] for i in s['inputs']), 'input IDs')
+    boards={b['id'] for b in base['boards']}
+    require(len(boards)==len(base['boards'])==6 and {d['board'] for d in base['domains']}==boards,
+            'six board roles with allocated domains')
     profiles = {'baseline': base, 'expanded': copy.deepcopy(base)}
     profiles['expanded']['domains'] = []
     base_names = {d['id'] for d in base['domains']}

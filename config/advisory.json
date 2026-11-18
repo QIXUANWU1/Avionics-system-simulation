@@ -1,6 +1,6 @@
 {
   "profile": "expanded",
-  "service_id": 40,
+  "service_id": 59,
   "domain": "analytics",
   "period_ms": 500,
   "inputs": [
@@ -13,5 +13,5 @@
       "key": "nav_context"
     }
   ],
-  "output": "synthetic_weather_echo_candidate_fraction_mirror_only"
+  "output": "synthetic_weather_echo_candidate_fraction_display_and_mirror_only"
 }

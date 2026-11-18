@@ -69,14 +69,21 @@ static void run_profile(unsigned p)
             assert(sample(&lab,p,SID_crew_indication).v[0]==0);
             fuel_before=sample(&lab,p,SID_fuel_quantity).v[0];
             heading_before=sample(&lab,p,SID_navigation_display).v[1];
+        } else if (t==1500) {
+            assert(sample(&lab,p,SID_gear_indication).v[0]==2);
+            assert(sample(&lab,p,SID_gear_position_fixture).v[0]>0);
         } else if (t==3500) {
             assert(sample(&lab,p,SID_control_effort).v[0]>.1);
             assert(sample(&lab,p,SID_actuator_response).v[0]>.1);
             bank_after_input=sample(&lab,p,SID_primary_display).v[0];
             assert(bank_after_input>7.0);
             assert(sample(&lab,p,SID_primary_display).v[1]>2);
-            assert(sample(&lab,p,SID_primary_display).v[2]>90);
-            assert(sample(&lab,p,SID_navigation_display).v[1]>heading_before);
+            const double indicated_airspeed=sample(&lab,p,SID_primary_display).v[2];
+            assert(indicated_airspeed>90 && indicated_airspeed<200);
+            assert(fabs(indicated_airspeed-sample(&lab,p,SID_airdata_decoded).v[1])<1.0);
+            const Sample nav=sample(&lab,p,SID_navigation_display), gps=sample(&lab,p,SID_gnss_fixture);
+            assert(nav.v[1]>heading_before && fabs(nav.v[1]-gps.v[1])<1);
+            assert(fabs(nav.v[2]-gps.v[2])<.5);
             assert(sample(&lab,p,SID_display_airdata).v[0]>6000);
             assert(sample(&lab,p,SID_atmosphere_sample).v[0]<1013.25);
             assert(sample(&lab,p,SID_gear_indication).v[0]==0);
@@ -84,7 +91,10 @@ static void run_profile(unsigned p)
         } else if (t==6900) {
             assert(sample(&lab,p,SID_flight_mode).v[0]==MODE_CENTER);
             assert(fabs(sample(&lab,p,SID_primary_display).v[0])<bank_after_input*.1);
-            assert(sample(&lab,p,SID_engine_display).v[2]<fuel_before);
+            const double fuel=sample(&lab,p,SID_fuel_quantity).v[0];
+            const double indicated=sample(&lab,p,SID_engine_display).v[2];
+            assert(indicated<fuel_before && fabs(indicated-fuel)<.05);
+            assert(fuel>119 && fuel<120);
             assert(sample(&lab,p,SID_radio_indication).v[0]==1);
             assert(sample(&lab,p,SID_cabin_indication).v[1]==1);
         }
