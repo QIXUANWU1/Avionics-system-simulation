@@ -1,0 +1,17 @@
+{
+  "profile": "expanded",
+  "service_id": 10,
+  "domain": "analytics",
+  "period_ms": 500,
+  "inputs": [
+    {
+      "id": 4,
+      "key": "weather_summary"
+    },
+    {
+      "id": 3,
+      "key": "nav_context"
+    }
+  ],
+  "output": "synthetic_weather_echo_candidate_fraction_mirror_only"
+}

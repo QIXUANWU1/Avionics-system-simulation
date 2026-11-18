@@ -1,0 +1,25 @@
+{
+  "presentation": [
+    {
+      "id": "weather_display",
+      "name": "气象显示输入",
+      "services": [
+        6
+      ]
+    },
+    {
+      "id": "analytics",
+      "name": "样本配对与旁路推理",
+      "services": [
+        7
+      ]
+    },
+    {
+      "id": "display_status",
+      "name": "显示可用性状态",
+      "services": [
+        9
+      ]
+    }
+  ]
+}

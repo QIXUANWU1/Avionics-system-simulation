@@ -1,0 +1,10 @@
+build/
+__pycache__/
+*.pyc
+*.pyo
+*.pending
+*.bin
+*.elf
+*.tar.gz
+*.pdf
+*.log

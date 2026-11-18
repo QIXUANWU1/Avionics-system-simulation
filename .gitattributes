@@ -1,0 +1,4 @@
+* text=auto eol=lf
+third_party/genann/genann.c -text whitespace=-blank-at-eof
+third_party/genann/genann.h -text
+third_party/genann/LICENSE -text whitespace=-blank-at-eof

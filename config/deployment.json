@@ -1,0 +1,53 @@
+{
+  "schema": "civil-weather-lab/1",
+  "scenario": "synthetic_civil_onboard_weather_display",
+  "sim_step_ms": 10,
+  "wire_version": 2,
+  "domains": [
+    {
+      "index": 0,
+      "id": "sensor_io",
+      "name": "Linux 采集替身：合成输入",
+      "services": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "index": 1,
+      "id": "navigation_context",
+      "name": "高度上下文",
+      "services": [
+        3
+      ]
+    },
+    {
+      "index": 2,
+      "id": "weather_decode",
+      "name": "气象摘要与可用性",
+      "services": [
+        4,
+        5
+      ]
+    },
+    {
+      "index": 3,
+      "id": "presentation",
+      "name": "气象显示与统计",
+      "services": [
+        6,
+        7,
+        9
+      ]
+    },
+    {
+      "index": 4,
+      "id": "input_status",
+      "name": "采集输入状态",
+      "services": [
+        8
+      ]
+    }
+  ]
+}
